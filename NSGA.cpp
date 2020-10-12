@@ -1,9 +1,9 @@
 #include<bits/stdc++.h>
 using namespace std;
 
-const int popsize = 250;// 种群大小
-const int generation = 1000;// 迭代次数
-const int dimension = 2;// 基因个数
+const int popsize = 100;// 种群大小
+const int generation = 500;// 迭代次数
+const int dimension = 10;// 基因个数
 const int NumFun = 2;// 目标函数的个数
 const int inf = 1e9;// 无穷值
 
@@ -46,8 +46,9 @@ bool dominate(const individual &a,const individual &b)
 
 void individual::init()
 {
-    for (int i = 0;i<dimension;i++)
-        gene[i] = rand()/(RAND_MAX+1.0);
+    gene[0] = (double)rand()/(double)(RAND_MAX+1.0);
+    for (int i = 1;i<dimension;i++)
+        gene[i] = (double)rand()/(double)(RAND_MAX) * 10.0 - 5;
 }
 
 // 计算目标函数的值
@@ -55,11 +56,10 @@ void individual::calc()
 {
     int n = dimension;
     fvalue[0] = gene[0];
-    double g = 0;
+    double g = 91;
     for (int i = 1;i<n;i++)
-        g += gene[i];
-    g = g * 9.0 / (double)(n - 1) + 1.0;
-    fvalue[1] = g * (1 - fvalue[0] / g - fvalue[0] / g * sin(10 * M_PI * gene[0]));
+        g += gene[i] * gene[i] - 10 * cos(4 * M_PI * gene[i]);
+    fvalue[1] = g*(1 - sqrt(fvalue[0] / g));
 }
 
 void individual::clear()
@@ -289,7 +289,7 @@ void population::start()
 
 void population::write()
 {
-    freopen("./VRP/my.txt","w",stdout);
+    freopen("./ZDT4/my.txt","w",stdout);
     for (int i = 0;i<popsize;i++)
         cout<<P[i].fvalue[0]<<' '<<P[i].fvalue[1]<<'\n';
     fclose(stdout);

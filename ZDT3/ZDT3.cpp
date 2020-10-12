@@ -1,8 +1,8 @@
 #include<bits/stdc++.h>
 using namespace std;
 
-const int popsize = 500;// 种群大小
-const int generation = 600;// 迭代次数
+const int popsize = 200;// 种群大小
+const int generation = 1000;// 迭代次数
 const int dimension = 2;// 基因个数
 const int NumFun = 2;// 目标函数的个数
 const int inf = 1e9;// 无穷值
@@ -59,7 +59,7 @@ void individual::calc()
     for (int i = 1;i<n;i++)
         g += gene[i];
     g = g * 9.0 / (double)(n - 1) + 1.0;
-    fvalue[1] = g * (1 - (fvalue[0] / g) * (fvalue[0] / g));
+    fvalue[1] = g * (1 - sqrt(fvalue[0] / g) - fvalue[0] / g * sin(10 * M_PI * gene[0]));
 }
 
 void individual::clear()
@@ -275,6 +275,7 @@ void population::start()
     rank = 0;
     for (int times = 0;times < generation;times++)
     {
+        // cout<<"generations "<<times<<'\n';
         // 非支配排序
         fast_nondominated_sort();
         // 精英策略从R中筛选popsize个放入P中
@@ -288,7 +289,7 @@ void population::start()
 
 void population::write()
 {
-    freopen("./ZDT2/my.txt","w",stdout);
+    freopen("./ZDT3/my.txt","w",stdout);
     for (int i = 0;i<popsize;i++)
         cout<<P[i].fvalue[0]<<' '<<P[i].fvalue[1]<<'\n';
     fclose(stdout);

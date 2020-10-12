@@ -1,7 +1,7 @@
 #include<bits/stdc++.h>
 using namespace std;
 
-const int popsize = 100;// 种群大小
+const int popsize = 500;// 种群大小
 const int generation = 500;// 迭代次数
 const int dimension = 2;// 基因个数
 const int NumFun = 2;// 目标函数的个数
@@ -275,7 +275,6 @@ void population::start()
     rank = 0;
     for (int times = 0;times < generation;times++)
     {
-        cout<<"generations "<<times<<'\n';
         // 非支配排序
         fast_nondominated_sort();
         // 精英策略从R中筛选popsize个放入P中
@@ -289,16 +288,20 @@ void population::start()
 
 void population::write()
 {
-    freopen("./VRP/my2.txt","w",stdout);
+    freopen("./ZDT1/my3.txt","w",stdout);
     for (int i = 0;i<popsize;i++)
         cout<<P[i].fvalue[0]<<' '<<P[i].fvalue[1]<<'\n';
     fclose(stdout);
 }
 
 int main(){
+    clock_t st,ed;
     srand(time(NULL));
+    st = clock();
     population solve;
     solve.start();
+    ed = clock();
+    cout<<(double)(ed - st) / CLOCKS_PER_SEC;
     solve.write();
     return 0;
 }
