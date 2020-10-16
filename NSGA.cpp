@@ -2,8 +2,8 @@
 using namespace std;
 
 const int popsize = 100;// 种群大小
-const int generation = 500;// 迭代次数
-const int dimension = 10;// 基因个数
+const int generation = 1000;// 迭代次数
+const int dimension = 2;// 基因个数
 const int NumFun = 2;// 目标函数的个数
 const int inf = 1e9;// 无穷值
 
@@ -19,11 +19,29 @@ class individual{
     private:
         double gene[dimension];// 个体所携带的基因
         double fvalue[NumFun];// 函数值
-        int ni;// 支配该个体的个数
         vector<int> si;// 当前个体所支配的解个体的集合
+        int ni;// 支配该个体的个数
         int rank;// 支配排序分层
         double crowding_distance;// 拥挤度
 };
+
+void individual::init()
+{
+    gene[0] = (double)rand()/(double)(RAND_MAX+1.0);
+    for (int i = 1;i<dimension;i++)
+        gene[i] = (double)rand()/(double)(RAND_MAX) * 10.0 - 5;
+}
+
+// 计算目标函数的值
+void individual::calc()
+{
+    int n = dimension;
+    fvalue[0] = gene[0];
+    double g = 1+10*(n-1);
+    for (int i = 1;i<n;i++)
+        g += gene[i] * gene[i] - 10 * cos(4 * M_PI * gene[i]);
+    fvalue[1] = g*(1 - sqrt(fvalue[0] / g));
+}
 
 individual::individual()
 {
@@ -44,24 +62,6 @@ bool dominate(const individual &a,const individual &b)
     return lt;
 }
 
-void individual::init()
-{
-    gene[0] = (double)rand()/(double)(RAND_MAX+1.0);
-    for (int i = 1;i<dimension;i++)
-        gene[i] = (double)rand()/(double)(RAND_MAX) * 10.0 - 5;
-}
-
-// 计算目标函数的值
-void individual::calc()
-{
-    int n = dimension;
-    fvalue[0] = gene[0];
-    double g = 91;
-    for (int i = 1;i<n;i++)
-        g += gene[i] * gene[i] - 10 * cos(4 * M_PI * gene[i]);
-    fvalue[1] = g*(1 - sqrt(fvalue[0] / g));
-}
-
 void individual::clear()
 {
     ni = rank = crowding_distance = 0;
@@ -70,6 +70,10 @@ void individual::clear()
 
 class population{
     public:
+        population()
+        {
+            layer.resize(popsize<<1);
+        }
         void fast_nondominated_sort();//快速非支配排序
         void Elite_Strategy();// 精英策略
         void merge();// 合并P和Q成为R
@@ -81,7 +85,7 @@ class population{
         vector<individual> P;// 父代种群
         vector<individual> Q;// 子代种群
         vector<individual> R;// 子代和父代种群
-        vector<int> layer[popsize<<1];// 支配排序分层
+        vector<vector<int> > layer;// 支配排序分层
         int rank;// 层数
 };
 
@@ -190,6 +194,12 @@ void population::merge()
     rank = 0;
 }
 
+void limited(double & it,double lower,double upper)
+{
+    it = max(lower,it);
+    it = min(upper,it);
+}
+
 void population::Next_generation()
 {
     vector<individual> tmp;
@@ -211,7 +221,7 @@ void population::Next_generation()
     for (int i = 0; i < popsize / 2; i++) 
     {
         double probability = (double)rand() / (double)(RAND_MAX);
-        if (probability <= 0.8)
+        if (probability <= 0.9)
         {
             double u = (double)rand() / (double)(RAND_MAX + 1),b;
             if (u <= 0.5) b = pow(2*u,1.0/21.0);
@@ -225,10 +235,15 @@ void population::Next_generation()
             {
                 c1.gene[j] = (P[x].gene[j] + P[y].gene[j]) / 2.0 - b * (P[y].gene[j] - P[x].gene[j]) / 2.0;
                 c2.gene[j] = (P[x].gene[j] + P[y].gene[j]) / 2.0 + b * (P[y].gene[j] - P[x].gene[j]) / 2.0;
-                c1.gene[j] = max(0.0,c1.gene[j]);
-                c1.gene[j] = min(1.0,c1.gene[j]);
-                c2.gene[j] = max(0.0,c2.gene[j]);
-                c2.gene[j] = min(1.0,c2.gene[j]);
+                if (j == 0)
+                {
+                    limited(c1.gene[j],0,1);
+                    limited(c2.gene[j],0,1);
+                }
+                else{
+                    limited(c1.gene[j],-5,5);
+                    limited(c2.gene[j],-5,5);
+                }
             }
             Q.push_back(c1);
             Q.push_back(c2);
@@ -239,21 +254,20 @@ void population::Next_generation()
     for (int i = 0;i<popsize;i++)
     {
         double probability = (double)rand() / (double)(RAND_MAX);
-        if (probability >= 0.95)
+        if (probability >= 0.9)
         {
             individual c1;
             for(int j=0;j<dimension;j++)
             {
-                int x = rand() % popsize;
                 double u = (double)rand() / (double)(RAND_MAX + 1),b;
                 if(u<0.5)
                     b = pow(2*u,1.0/21.0) - 1;
                 else
                     b = 1 - pow(2-2*u,1.0/21.0);
 
-                c1.gene[j]=P[x].gene[j]+(1.0-0.0)*u;
-                c1.gene[j] = max(0.0,c1.gene[j]);
-                c1.gene[j] = min(1.0,c1.gene[j]);
+                c1.gene[j]=P[i].gene[j]+(1.0-0.0)*u;
+                if (j == 0) limited(c1.gene[j],0,1);
+                else limited(c1.gene[j],-5,5);
             }
             Q.push_back(c1);
         }
@@ -275,7 +289,6 @@ void population::start()
     rank = 0;
     for (int times = 0;times < generation;times++)
     {
-        // cout<<"generations "<<times<<'\n';
         // 非支配排序
         fast_nondominated_sort();
         // 精英策略从R中筛选popsize个放入P中

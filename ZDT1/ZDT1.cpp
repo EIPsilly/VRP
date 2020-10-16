@@ -1,11 +1,11 @@
 #include<bits/stdc++.h>
 using namespace std;
 
-const int popsize = 500;// 种群大小
+const int popsize = 100;// 种群大小
 const int generation = 500;// 迭代次数
-const int dimension = 2;// 基因个数
+const int dimension = 10;// 基因个数
 const int NumFun = 2;// 目标函数的个数
-const int inf = 1e9;// 无穷值
+const int inf = 1e5;// 无穷值
 
 // 单个个体
 class individual{
@@ -211,7 +211,7 @@ void population::Next_generation()
     for (int i = 0; i < popsize / 2; i++) 
     {
         double probability = (double)rand() / (double)(RAND_MAX);
-        if (probability <= 0.8)
+        if (probability <= 0.9)
         {
             double u = (double)rand() / (double)(RAND_MAX + 1),b;
             if (u <= 0.5) b = pow(2*u,1.0/21.0);
@@ -239,12 +239,12 @@ void population::Next_generation()
     for (int i = 0;i<popsize;i++)
     {
         double probability = (double)rand() / (double)(RAND_MAX);
-        if (probability >= 0.95)
+        if (probability <= 1.0/30.0)
         {
             individual c1;
+            int x = rand() % popsize;
             for(int j=0;j<dimension;j++)
             {
-                int x = rand() % popsize;
                 double u = (double)rand() / (double)(RAND_MAX + 1),b;
                 if(u<0.5)
                     b = pow(2*u,1.0/21.0) - 1;
@@ -288,7 +288,7 @@ void population::start()
 
 void population::write()
 {
-    freopen("./ZDT1/my3.txt","w",stdout);
+    freopen("./ZDT1/my.txt","w",stdout);
     for (int i = 0;i<popsize;i++)
         cout<<P[i].fvalue[0]<<' '<<P[i].fvalue[1]<<'\n';
     fclose(stdout);
